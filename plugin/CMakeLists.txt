@@ -241,6 +241,8 @@ target_sources(${PROJECT_NAME}
         src/AutoOffset.cpp
         include/PresetManager.h
         src/PresetManager.cpp
+        include/AudioRecorder.h
+        src/AudioRecorder.cpp
         include/Processor.h
         src/Processor.cpp
         include/MidiMapper.h
@@ -315,6 +317,7 @@ target_link_libraries(${PROJECT_NAME}
         juce::juce_core
         juce::juce_dsp
         juce::juce_events
+        juce::juce_audio_formats
         juce::juce_audio_utils
         juce::juce_audio_devices
         juce::juce_audio_processors

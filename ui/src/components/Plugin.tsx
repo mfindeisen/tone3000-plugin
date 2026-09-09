@@ -26,6 +26,8 @@ import { OAuthOverlay } from './OAuthOverlay';
 import { ConnectionModal } from './ConnectionModal';
 import { ToneBrowser } from './ToneBrowser';
 import { UpdateNotice } from './UpdateNotice';
+import { RecordingsModal } from './RecordingsModal';
+import { useAudioBackend } from '../hooks/useAudioBackend';
 import Settings, { type SettingsTab } from './Settings';
 import { T3K_API } from '../t3k/config';
 import type { Model } from '../types/tone';
@@ -33,6 +35,8 @@ import type { ToneBlock } from '../types/chain';
 
 export const Plugin: React.FC = () => {
   const [showSettings, setShowSettings] = useState(false);
+  const [showRecordingsModal, setShowRecordingsModal] = useState(false);
+  const backend = useAudioBackend();
   // Which tab Settings opens on; banner / gear land on System (setup first).
   const settingsTabRef = useRef<SettingsTab>('system');
   const [showTuner, setShowTuner] = useState(false);
@@ -447,6 +451,7 @@ export const Plugin: React.FC = () => {
           onStereoToggle={handleStereoToggle}
           showTuner={showTuner}
           onToggleTuner={handleToggleTuner}
+          onOpenRecordings={() => setShowRecordingsModal(true)}
           canUndo={canUndo}
           canRedo={canRedo}
           onUndo={handleUndo}
@@ -617,6 +622,13 @@ export const Plugin: React.FC = () => {
 
         {/* Update available, below OAuth/connection (z 3000) so those always win. */}
         <UpdateNotice notice={updateNotice} onRemindLater={remindLater} />
+
+        {/* Audio Recordings Library Modal */}
+        <RecordingsModal
+          backend={backend}
+          isOpen={showRecordingsModal}
+          onClose={() => setShowRecordingsModal(false)}
+        />
       </ToastProvider>
     </div>
   );

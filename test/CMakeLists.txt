@@ -38,6 +38,7 @@ target_sources(DspTests PRIVATE
     # Compiled straight from the plugin tree so the tests exercise the real
     # processor, not a copy. GUI sources are excluded; HEADLESS=1 below
     # compiles the processor exactly like the headless plugin build.
+    ../plugin/src/AudioRecorder.cpp
     ../plugin/src/AutoOffset.cpp
     ../plugin/src/BlockEq.cpp
     ../plugin/src/BlockSpectrum.cpp

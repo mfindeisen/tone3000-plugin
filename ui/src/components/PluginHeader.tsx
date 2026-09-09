@@ -5,6 +5,8 @@ import { AccountMenu } from './AccountMenu';
 import { IconButton } from './IconButton';
 import { PresetBar } from './PresetBar';
 import { StereoModeToggle } from './StereoModeToggle';
+import { RecorderWidget } from './RecorderWidget';
+import { useAudioBackend } from '../hooks/useAudioBackend';
 import { HELP } from './helpText';
 import { BORDER } from './theme';
 import type { usePresets } from '../hooks/usePresets';
@@ -39,6 +41,7 @@ interface PluginHeaderProps {
   onStereoToggle: (enabled: boolean) => void;
   showTuner: boolean;
   onToggleTuner: (show: boolean) => void;
+  onOpenRecordings: () => void;
   canUndo: boolean;
   canRedo: boolean;
   onUndo: () => void;
@@ -64,6 +67,7 @@ export const PluginHeader = React.memo(function PluginHeader({
   onStereoToggle,
   showTuner,
   onToggleTuner,
+  onOpenRecordings,
   canUndo,
   canRedo,
   onUndo,
@@ -74,6 +78,8 @@ export const PluginHeader = React.memo(function PluginHeader({
   onLogin,
   onLogout,
 }: PluginHeaderProps) {
+  const backend = useAudioBackend();
+
   return (
     <div
       style={{
@@ -98,7 +104,7 @@ export const PluginHeader = React.memo(function PluginHeader({
         <img src="/t3k.svg" alt="T3K" style={{ width: '160rem' }} />
       </a>
       {/* 40px between header items; tight pairs (undo/redo) group inside. */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '40rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '24rem' }}>
         <PresetBar
           active={activePreset}
           presets={presetStore.presets}
@@ -111,6 +117,7 @@ export const PluginHeader = React.memo(function PluginHeader({
           onReset={onReset}
         />
         <StereoModeToggle stereoEnabled={stereoEnabled} onToggle={onStereoToggle} />
+        <RecorderWidget backend={backend} onOpenRecordings={onOpenRecordings} />
         <IconButton
           onClick={() => onToggleTuner(!showTuner)}
           help={HELP.tuner}

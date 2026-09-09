@@ -15,7 +15,7 @@
     "@dnd-kit/helpers": "^0.5.0",
     "@dnd-kit/react": "^0.5.0",
     "@fontsource/roboto-mono": "^5.3.0",
-    "@juce-framework/webview": "file:../libs/juce/modules/juce_gui_extra/native/typescript/webview-interop",
+    "@juce-framework/webview": "^1.0.0",
     "dompurify": "^3.4.12",
     "lucide-react": "^1.33.0",
     "react": "^19.1.0",

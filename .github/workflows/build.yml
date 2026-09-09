@@ -278,7 +278,6 @@ jobs:
       - name: Run DSP tests (macOS)
         if: matrix.os == 'macos'
         run: ctest --test-dir build-arm64/test --output-on-failure
-
       # Merge single-arch artefact trees into the path create-pkg.sh expects.
       - name: Lipo universal artefacts (macOS)
         if: matrix.os == 'macos'
@@ -526,13 +525,53 @@ jobs:
           timestamp-rfc3161: http://timestamp.acs.microsoft.com
           timestamp-digest: SHA256
 
+      # Package the raw Standalone binary and factory presets into a portable ZIP
+      # since the user does not have Administrator rights to run an installer.
+      - name: Package portable ZIP (Windows)
+        if: matrix.os == 'windows'
+        shell: pwsh
+        run: |
+          $pkgName = "TONE3000-v$env:T3K_VERSION-${{ matrix.os }}-${{ matrix.arch }}-portable"
+          $stageDir = "build\$pkgName"
+          New-Item -ItemType Directory -Force -Path $stageDir | Out-Null
+          
+          # Copy the Standalone .exe
+          Copy-Item "build\plugin\TONE3000_artefacts\${{ env.BUILD_TYPE }}\Standalone\TONE3000.exe" -Destination "$stageDir\"
+          
+          # Copy factory presets if they exist
+          if (Test-Path "resources\factory-presets") {
+            New-Item -ItemType Directory -Force -Path "$stageDir\factory-presets" | Out-Null
+            Copy-Item "resources\factory-presets\*" -Destination "$stageDir\factory-presets\"
+          }
+          
+          # Compress to ZIP
+          Compress-Archive -Path "$stageDir\*" -DestinationPath "build\$pkgName.zip" -Force
+
       - name: Upload artifacts (Windows)
         if: matrix.os == 'windows' && success()
         uses: actions/upload-artifact@v4
         with:
-          name: TONE3000-v${{ env.T3K_VERSION }}-${{ matrix.os }}-${{ matrix.arch }}
+          name: TONE3000-v${{ env.T3K_VERSION }}-${{ matrix.os }}-${{ matrix.arch }}-portable
+          path: build/TONE3000-v*-windows-x64-portable.zip
+          if-no-files-found: error
+
+      - name: Upload artifacts (Windows Installer)
+        if: matrix.os == 'windows' && success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TONE3000-v${{ env.T3K_VERSION }}-${{ matrix.os }}-${{ matrix.arch }}-installer
           path: build/TONE3000-v*-${{ matrix.os }}-${{ matrix.arch }}.exe
           if-no-files-found: error
+
+      - name: Create GitHub Release
+        if: matrix.os == 'windows' && success()
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_id }}
+          name: Automated Build ${{ github.run_id }}
+          files: |
+            build/TONE3000-v*-windows-x64-portable.zip
+            build/TONE3000-v*-${{ matrix.os }}-${{ matrix.arch }}.exe
 
       # Linux: tarball with install script (the usual convention on Linux).
       - name: Package tarball (Linux)

@@ -24,6 +24,24 @@ export interface IAudioBackend {
   addEventListener(eventId: string, fn: (payload: unknown) => void): () => void;
 }
 
+export interface RecordingState {
+  isRecording: boolean;
+  isPaused: boolean;
+  durationSeconds: number;
+  fileSizeBytes: number;
+  filePath: string;
+  fileName: string;
+}
+
+export interface RecordingFileInfo {
+  fileName: string;
+  filePath: string;
+  fileSizeBytes: number;
+  durationSeconds: number;
+  creationTimeISO: string;
+  presetName: string;
+}
+
 export interface ValueChangeEvent<T> {
   addListener(fn: (value: T) => void): number;
   removeListener(id: number): void;

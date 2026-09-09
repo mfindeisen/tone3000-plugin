@@ -28,6 +28,7 @@
 #include "StereoOffset.h"
 #include "PresetManager.h"
 #include "TunerDetector.h"
+#include "AudioRecorder.h"
 
 class TONE3000Processor;
 
@@ -1129,6 +1130,15 @@ private:
   // matrix is the identity and the image stage skips the mix loop entirely;
   // the fold configuration is never the identity, so it always runs.
   juce::SmoothedValue<float> imageGainLtoL, imageGainLtoR, imageGainRtoL, imageGainRtoR;
+
+public:
+  AudioRecorder audioRecorder;
+
+  // Audio recorder public helper API
+  bool startRecording(const juce::String& format = "wav", int bitDepth = 24);
+  void stopRecording();
+  void setRecordingPaused(bool paused);
+  juce::var getRecordingState();
 
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TONE3000Processor)
 };

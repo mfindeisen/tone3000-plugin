@@ -1,5 +1,6 @@
 #include "EditorWebViewSetup.h"
 #include "Editor.h"
+#include "AudioRecorder.h"
 
 namespace EditorWebViewSetup {
 
@@ -525,6 +526,56 @@ juce::WebBrowserComponent::Options buildMainWebViewOptions(TONE3000Editor* edito
           "openMicSettings", guarded(0, juce::var(), [editor](const juce::Array<juce::var>&) {
             return editor->audioSettings != nullptr ? editor->audioSettings->openMicSettings()
                                                     : juce::var();
+          }))
+      // --- AUDIO RECORDER ---------------------------------------------------
+      .withNativeFunction(
+          "startRecording", guarded(0, false, [editor](const juce::Array<juce::var>& args) {
+            const juce::String format = args.size() >= 1 ? args[0].toString() : "wav";
+            const int bitDepth = args.size() >= 2 ? static_cast<int>(coerceDouble(args[1])) : 24;
+            return juce::var(editor->processor.startRecording(format, bitDepth));
+          }))
+      .withNativeFunction(
+          "stopRecording", guarded(0, juce::var(), [editor](const juce::Array<juce::var>&) {
+            editor->processor.stopRecording();
+            return juce::var(true);
+          }))
+      .withNativeFunction(
+          "setRecordingPaused", guarded(1, juce::var(), [editor](const juce::Array<juce::var>& args) {
+            editor->processor.setRecordingPaused(coerceBool(args[0]));
+            return juce::var(true);
+          }))
+      .withNativeFunction(
+          "getRecordingState", guarded(0, juce::var(), [editor](const juce::Array<juce::var>&) {
+            return editor->processor.getRecordingState();
+          }))
+      .withNativeFunction(
+          "getSavedRecordings", guarded(0, juce::var(), [](const juce::Array<juce::var>&) {
+            const auto recs = AudioRecorder::getSavedRecordings();
+            juce::Array<juce::var> arr;
+            for (const auto& r : recs) {
+              juce::DynamicObject::Ptr obj = new juce::DynamicObject();
+              obj->setProperty("fileName", r.fileName);
+              obj->setProperty("filePath", r.filePath);
+              obj->setProperty("fileSizeBytes", r.fileSizeBytes);
+              obj->setProperty("durationSeconds", r.durationSeconds);
+              obj->setProperty("creationTimeISO", r.creationTimeISO);
+              obj->setProperty("presetName", r.presetName);
+              arr.add(juce::var(obj.get()));
+            }
+            return juce::var(arr);
+          }))
+      .withNativeFunction(
+          "openRecordingsFolder", guarded(0, juce::var(), [](const juce::Array<juce::var>&) {
+            AudioRecorder::getDefaultRecordingsFolder().startAsProcess();
+            return juce::var(true);
+          }))
+      .withNativeFunction(
+          "deleteRecordingFile", guarded(1, false, [](const juce::Array<juce::var>& args) {
+            return juce::var(AudioRecorder::deleteRecordingFile(args[0].toString()));
+          }))
+      .withNativeFunction(
+          "renameRecordingFile", guarded(2, false, [](const juce::Array<juce::var>& args) {
+            return juce::var(AudioRecorder::renameRecordingFile(args[0].toString(), args[1].toString()));
           }))
       // --- MIDI: device layer (standalone only) -------------------------------
       .withNativeFunction(
