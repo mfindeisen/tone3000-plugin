@@ -102,6 +102,11 @@ public:
   void cancelAutoOffset() override;
   juce::var pollAutoOffset() override;
 
+  bool startRecording(const juce::String& format, int bitDepth) override;
+  void stopRecording() override;
+  void setRecordingPaused(bool paused) override;
+  juce::var getRecordingState() override;
+
   juce::String pluginVersion() override;
   juce::String uniqueDeviceId() override;
   void setAccessToken(const juce::String& token) override;

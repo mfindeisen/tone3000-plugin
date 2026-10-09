@@ -125,6 +125,11 @@ public:
   void cancelAutoOffset() override {}
   juce::var pollAutoOffset() override { return autoMeasure_; }
 
+  bool startRecording(const juce::String& format, int bitDepth) override;
+  void stopRecording() override;
+  void setRecordingPaused(bool paused) override;
+  juce::var getRecordingState() override;
+
   juce::String pluginVersion() override { return version_; }
   juce::String uniqueDeviceId() override { return "testbed-device"; }
   void setAccessToken(const juce::String&) override {}
@@ -158,6 +163,13 @@ private:
   juce::var autoMeasure_;
   juce::String version_;
   std::unique_ptr<MockSignal> signal_;
+
+  bool recordingActive_{false};
+  bool recordingPaused_{false};
+  double recordingStartedAtMs_{0.0};
+  double recordingPausedAccumSec_{0.0};
+  double recordingPausedAtMs_{0.0};
+  juce::String recordingFileName_;
 };
 
 }  // namespace t3k::ui::testbed

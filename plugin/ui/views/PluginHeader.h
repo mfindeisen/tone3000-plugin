@@ -9,6 +9,7 @@
 #include "StereoModeToggle.h"
 #include "services/Services.h"
 #include "widgets/IconButton.h"
+#include "widgets/RecorderWidget.h"
 
 namespace t3k::ui {
 
@@ -46,6 +47,7 @@ private:
   IconButton tuner_;
   IconButton undo_{Icon::Undo2, 28};
   IconButton redo_{Icon::Redo2, 28};
+  RecorderWidget recorder_;
   AccountMenu account_;
   bool tunerShown_ = false;
 };

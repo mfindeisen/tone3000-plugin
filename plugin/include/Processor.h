@@ -29,6 +29,7 @@
 #include "StereoOffset.h"
 #include "PresetManager.h"
 #include "TunerDetector.h"
+#include "AudioRecorder.h"
 
 class TONE3000Processor;
 
@@ -504,6 +505,14 @@ public:
   void startAutoOffset();
   void cancelAutoOffset();
   juce::var pollAutoOffset();  // { state: "idle"|"listening"|"done"|"timeout", matchedMs?, polarityFlipped?, progress? }
+
+  // Audio recorder: captures the final output (post output gain) to
+  // ~/Documents/TONE3000/Recordings. Message-thread calls; the audio thread
+  // only feeds the recorder's lock-free ring buffer (see AudioRecorder.h).
+  bool startRecording(const juce::String& format = "wav", int bitDepth = 24);
+  void stopRecording();
+  void setRecordingPaused(bool paused);
+  juce::var getRecordingState();  // { isRecording, isPaused, durationSeconds, fileSizeBytes, filePath, fileName, droppedSamples }
 
   // Location of the on-disk diagnostic log. Single source of truth shared by the
   // FileLogger setup and the UI's "copy/reveal logs" actions so they never drift.
@@ -1325,6 +1334,11 @@ private:
   // matrix is the identity and the image stage skips the mix loop entirely;
   // the fold configuration is never the identity, so it always runs.
   juce::SmoothedValue<float> imageGainLtoL, imageGainLtoR, imageGainRtoL, imageGainRtoR;
+
+  // Output recorder (see the public startRecording/getRecordingState above).
+  // Declared last so it is destroyed first: its destructor finalises an open
+  // file while everything else is still alive.
+  AudioRecorder audioRecorder;
 
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TONE3000Processor)
 };

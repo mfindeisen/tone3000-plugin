@@ -354,6 +354,57 @@ bool MockBackend::setMidiCcMapping(const juce::String& targetId, int cc) {
   return true;
 }
 
+bool MockBackend::startRecording(const juce::String& format, int /*bitDepth*/) {
+  juce::String ext = format.toLowerCase().trimCharactersAtStart(".");
+  if (ext != "wav" && ext != "flac" && ext != "ogg")
+    ext = "wav";
+  recordingActive_ = true;
+  recordingPaused_ = false;
+  recordingStartedAtMs_ = juce::Time::getMillisecondCounterHiRes();
+  recordingPausedAccumSec_ = 0.0;
+  recordingPausedAtMs_ = 0.0;
+  recordingFileName_ = "TONE3000_testbed." + ext;
+  return true;
+}
+
+void MockBackend::stopRecording() {
+  recordingActive_ = false;
+  recordingPaused_ = false;
+  recordingPausedAccumSec_ = 0.0;
+  recordingPausedAtMs_ = 0.0;
+}
+
+void MockBackend::setRecordingPaused(bool paused) {
+  if (!recordingActive_ || recordingPaused_ == paused)
+    return;
+  const double now = juce::Time::getMillisecondCounterHiRes();
+  if (paused) {
+    recordingPausedAtMs_ = now;
+  } else {
+    recordingPausedAccumSec_ += (now - recordingPausedAtMs_) * 0.001;
+    recordingPausedAtMs_ = 0.0;
+  }
+  recordingPaused_ = paused;
+}
+
+juce::var MockBackend::getRecordingState() {
+  double duration = 0.0;
+  if (recordingActive_) {
+    const double now = juce::Time::getMillisecondCounterHiRes();
+    const double endMs = recordingPaused_ ? recordingPausedAtMs_ : now;
+    duration = (endMs - recordingStartedAtMs_) * 0.001 - recordingPausedAccumSec_;
+    if (duration < 0.0)
+      duration = 0.0;
+  }
+  return obj({{"isRecording", recordingActive_},
+              {"isPaused", recordingPaused_},
+              {"durationSeconds", duration},
+              {"fileSizeBytes", 0},
+              {"filePath", recordingFileName_},
+              {"fileName", recordingFileName_},
+              {"droppedSamples", 0}});
+}
+
 juce::var MockBackend::getMeterLevels() {
   if (signal_ != nullptr)
     return signal_->meters(chain_);

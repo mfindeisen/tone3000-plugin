@@ -841,6 +841,9 @@ void TONE3000Processor::prepareToPlay(double sampleRate, int samplesPerBlock) {
   // Prime the cached parameter values from the resolved atomics.
   updateCachedParameters();
 
+  // Output recorder. Keeps an active take running when the rate and channel
+  // count are unchanged; finalises it otherwise.
+  audioRecorder.prepareToPlay(sampleRate, juce::jmax(1, getMainBusNumOutputChannels()));
 
   // Detect mono input/output devices in the standalone app. The device
   // restarts (and re-runs prepareToPlay) whenever the user changes the audio
@@ -1010,6 +1013,9 @@ void TONE3000Processor::releaseResources() {
   // (prepareToPlay restarts it). Stopping here also guarantees no worker
   // outlives the buffers/lanes a stale job could reference.
   rtWorkerPool.stop();
+
+  // No more callbacks are coming: finalise any open recording.
+  audioRecorder.releaseResources();
 
   // DO NOT clear chain blocks here! They should persist across bypass/unbypassed states.
   // Chain blocks are managed by the plugin's state system and should only be cleared
@@ -2064,6 +2070,13 @@ void TONE3000Processor::processBlock(juce::AudioBuffer<float>& buffer, juce::Mid
     outputMeterLevelL.store(peakToDb(peakL));
     outputMeterLevelR.store(peakToDb(peakR));
   }
+
+  // ###########
+  // Output recorder: the exact signal the host receives. Lock-free copy into
+  // the recorder's ring buffer; idle cost is one atomic load.
+  // ###########
+  if (audioRecorder.isRecording())
+    audioRecorder.pushBlock(buffer);
 }
 
 // ##################
@@ -2346,4 +2359,47 @@ juce::File TONE3000Processor::getLogFile() {
   return juce::FileLogger::getSystemLogFileFolder()
       .getChildFile("TONE3000")
       .getChildFile("TONE3000.log");
+}
+
+// #########################
+// AUDIO RECORDER API
+// #########################
+bool TONE3000Processor::startRecording(const juce::String& format, int bitDepth) {
+  const juce::File folder = AudioRecorder::getDefaultRecordingsFolder();
+  const juce::String timestamp = juce::Time::getCurrentTime().formatted("%Y%m%d_%H%M%S");
+
+  // Only formats JUCE can actually encode; anything else (e.g. mp3) is WAV.
+  juce::String ext = format.toLowerCase().trimCharactersAtStart(".");
+  if (ext != "wav" && ext != "flac" && ext != "ogg")
+    ext = "wav";
+
+  const juce::File targetFile = folder.getChildFile("TONE3000_" + timestamp + "." + ext);
+
+  juce::StringPairArray metadata;
+  metadata.set(juce::WavAudioFormat::riffInfoSoftware, "TONE3000 Plugin");
+  metadata.set(juce::WavAudioFormat::riffInfoDateCreated,
+               juce::Time::getCurrentTime().formatted("%Y-%m-%d"));
+
+  return audioRecorder.startRecording(targetFile, ext, bitDepth, metadata);
+}
+
+void TONE3000Processor::stopRecording() {
+  audioRecorder.stopRecording();
+}
+
+void TONE3000Processor::setRecordingPaused(bool paused) {
+  audioRecorder.setPaused(paused);
+}
+
+juce::var TONE3000Processor::getRecordingState() {
+  const auto file = audioRecorder.getCurrentFile();
+  juce::DynamicObject::Ptr obj = new juce::DynamicObject();
+  obj->setProperty("isRecording", audioRecorder.isRecording());
+  obj->setProperty("isPaused", audioRecorder.isPaused());
+  obj->setProperty("durationSeconds", audioRecorder.getRecordedDurationSeconds());
+  obj->setProperty("fileSizeBytes", audioRecorder.getRecordedBytes());
+  obj->setProperty("filePath", file.getFullPathName());
+  obj->setProperty("fileName", file.getFileName());
+  obj->setProperty("droppedSamples", audioRecorder.getDroppedSamples());
+  return juce::var(obj.get());
 }

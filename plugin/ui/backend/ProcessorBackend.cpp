@@ -232,6 +232,22 @@ void ProcessorBackend::startAutoOffset() { processor_.startAutoOffset(); }
 void ProcessorBackend::cancelAutoOffset() { processor_.cancelAutoOffset(); }
 juce::var ProcessorBackend::pollAutoOffset() { return processor_.pollAutoOffset(); }
 
+bool ProcessorBackend::startRecording(const juce::String& format, int bitDepth) {
+  return processor_.startRecording(format, bitDepth);
+}
+
+void ProcessorBackend::stopRecording() {
+  processor_.stopRecording();
+}
+
+void ProcessorBackend::setRecordingPaused(bool paused) {
+  processor_.setRecordingPaused(paused);
+}
+
+juce::var ProcessorBackend::getRecordingState() {
+  return processor_.getRecordingState();
+}
+
 // Misc
 juce::String ProcessorBackend::pluginVersion() { return JucePlugin_VersionString; }
 juce::String ProcessorBackend::uniqueDeviceId() { return juce::SystemStats::getUniqueDeviceID(); }

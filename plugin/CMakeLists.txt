@@ -336,6 +336,8 @@ target_sources(${PROJECT_NAME}
         src/PresetFile.cpp
         include/PresetManager.h
         src/PresetManager.cpp
+        include/AudioRecorder.h
+        src/AudioRecorder.cpp
         include/Processor.h
         src/Processor.cpp
         include/MidiMapper.h

@@ -127,6 +127,12 @@ public:
   virtual void cancelAutoOffset() = 0;
   virtual juce::var pollAutoOffset() = 0;
 
+  // Audio Recorder
+  virtual bool startRecording(const juce::String& format, int bitDepth) = 0;
+  virtual void stopRecording() = 0;
+  virtual void setRecordingPaused(bool paused) = 0;
+  virtual juce::var getRecordingState() = 0;
+
   // Misc
   virtual juce::String pluginVersion() = 0;
   virtual juce::String uniqueDeviceId() = 0;
