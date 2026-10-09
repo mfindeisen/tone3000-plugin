@@ -15,9 +15,9 @@ name: Deploy to TestFlight
 # already on TestFlight is refused at upload, so the build number is the run
 # number rather than anything in the tree.
 
+# Manual only. The Windows build publishes GitHub Releases for the portable
+# ZIP / installer; those must not kick off an iOS TestFlight upload.
 on:
-  release:
-    types: [published]
   workflow_dispatch:
     inputs:
       ref:
