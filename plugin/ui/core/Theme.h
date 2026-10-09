@@ -44,6 +44,7 @@ inline const juce::Colour kBlack{0xff000000};
 // rgba(235, 235, 245, a) family: primary muted text, secondary labels,
 // pressed/active fill.
 inline const juce::Colour kMuted = juce::Colour(235, 235, 245).withAlpha(0.60f);
+inline const juce::Colour kTextSecondary = kMuted;
 inline const juce::Colour kSubtle = juce::Colour(235, 235, 245).withAlpha(0.40f);
 inline const juce::Colour kHighlight = juce::Colour(235, 235, 245).withAlpha(0.18f);
 // Disabled/idle icon gray.
